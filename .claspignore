@@ -1,0 +1,14 @@
+node_modules/
+.git/
+README.md
+.clasp.json
+.clasprc.json
+
+/*
+!src/
+!appsscript.json
+
+src/**/*
+!src/**/*.js
+!src/**/*.gs
+!src/**/*.html
