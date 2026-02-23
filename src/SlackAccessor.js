@@ -120,10 +120,13 @@ class SlackAccessor {
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v != null),
     );
-    const params = new URLSearchParams(cleanData).toString();
+
+    const queryString = Object.keys(cleanData)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(cleanData[key])}`)
+      .join("&");
     const url =
-      method === "GET" && params
-        ? `${this.baseUrl}${endpoint}?${params}`
+      method === "GET" && queryString
+        ? `${this.baseUrl}${endpoint}?${queryString}`
         : `${this.baseUrl}${endpoint}`;
 
     const options = {
