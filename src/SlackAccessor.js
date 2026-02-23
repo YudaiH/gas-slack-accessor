@@ -143,6 +143,7 @@ class SlackAccessor {
     try {
       const response = UrlFetchApp.fetch(url, options);
       const statusCode = response.getResponseCode();
+      const headers = response.getHeaders();
       const contentText = response.getContentText();
       const content = this._safeJsonParse(contentText);
 
