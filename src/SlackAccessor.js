@@ -85,21 +85,51 @@ class SlackAccessor {
   }
 
   /**
-   * ユーザーの表示名を取得します。
-   * (display_name を優先し、未設定なら real_name を返します)
+   * ユーザーの情報を取得します。
    * @param {string} userId ユーザーID
-   * @returns {string} ユーザー表示名（取得失敗時は空文字）
+   * @returns {Object|null} ユーザーオブジェクト
    */
-  getUserName(userId) {
+  getUserInfo(userId) {
     const params = { user: userId };
     const content = this._request("users.info", "GET", params);
 
     if (!content.ok || !content.user) {
-      return "";
+      return null;
     }
+    return content.user;
+  }
 
-    const profile = content.user.profile;
-    return profile?.display_name || profile?.real_name || "Unknown User";
+  /**
+   * ワークスペース内の全ユーザー情報を取得します。
+   * @param {Object} [options={}] limit などの追加パラメータ
+   * @returns {Object[]} ユーザーオブジェクトの配列
+   */
+  getAllUserInfo(options = {}) {
+    let allMembers = [];
+
+    let cursor = null;
+    do {
+      const params = {
+        ...options,
+        limit: options.limit || 1000,
+        cursor: cursor,
+      };
+
+      const content = this._request("users.list", "GET", params);
+      if (!content.ok) {
+        return null;
+      }
+
+      if (content.members) {
+        allMembers = allMembers.concat(content.members);
+      }
+
+      cursor = content.response_metadata
+        ? content.response_metadata.next_cursor
+        : null;
+    } while (cursor);
+
+    return allMembers;
   }
 
   // ==========
@@ -122,7 +152,10 @@ class SlackAccessor {
     );
 
     const queryString = Object.keys(cleanData)
-      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(cleanData[key])}`)
+      .map(
+        (key) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(cleanData[key])}`,
+      )
       .join("&");
     const url =
       method === "GET" && queryString
